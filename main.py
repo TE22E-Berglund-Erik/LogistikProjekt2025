@@ -1,6 +1,8 @@
 import random
 
 ids = set()
+users = []
+login = False
 
 def generate_id(prefix):
     while True:
@@ -59,3 +61,70 @@ class Warehouse(Objekt):
     def __init__(self):
         super().__init__(generate_id("W"))
         self.stock = []
+
+while login == False:
+    print("\n1. Register")
+    print("2. Login")
+    print("3. Exit")
+    choice = input("Enter choice: ")
+    
+    if choice == "1":
+        username = input("Enter username: ")
+        if any(username == user.username for user in users):
+            print("Username already exists")
+            continue
+        password = input("Enter password: ")
+        user = User(username, password)
+        users.append(user)
+        print("Registration successful")
+
+    elif choice == "2":
+        username = input("Enter username: ")
+        password = input("Enter password: ")
+        user = next((user for user in users if user.username == username and user.password == password))
+        if user:
+            print("Login successful")
+            login = True
+
+
+    elif choice == "3":
+        break
+
+        
+    if isinstance(user, Admin):
+        while True:
+            print("\nAdmin Menu")
+            print("1. Show all users")
+            print("2. Create admin")
+            print("3. Logout")
+            choice = input("Enter choice: ")
+
+            if choice == "1":
+                for u in users:
+                    print(f"{u.id}: {u.username}")
+            elif choice == "2":
+                username = input("Enter new admin username: ")
+                password = input("Enter new admin password: ")
+                new_admin = Admin(username, password)
+                users.append(new_admin)
+                print("Admin created")
+            elif choice == "3":
+                print("Logged out.")
+                login = False
+                break
+
+    else:
+        while True:
+            print("\nCustomer Menu")
+            print("1. View profile")
+            print("2. Logout")
+            choice = input("Enter choice: ")
+
+            if choice == "1":
+                print(f"Username: {user.username}, ID: {user.id}")
+            elif choice == "2":
+                print("Logged out.")
+                login = False
+                break
+            
+
