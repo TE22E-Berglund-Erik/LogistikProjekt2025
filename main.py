@@ -1,10 +1,11 @@
 import random
 
+# Globala variabler
 ids = set()
 users = []
 login = False
 
-
+# Funktion för att generera unika ID:n
 def generate_id(prefix):
     while True:
         new_id = f"{prefix}{random.randint(1000, 9999)}"
@@ -12,17 +13,17 @@ def generate_id(prefix):
             ids.add(new_id)
             return new_id
 
-
+# Basklass för entiteter med ID
 class Entity:
     def __init__(self, prefix):
-        self._id = generate_id(prefix)  # Generarar id baserat på prefix
+        self._id = generate_id(prefix)  # Genererar ID med prefix
 
     @property
     def id(self):
-        return self._id  # Returnera id
+        return self._id
 
-
-class User(Entity):  # Basklass för användare
+# Basklass för användare
+class User(Entity):
     def __init__(self, username, password, email="", prefix="U"):
         super().__init__(prefix)
         self._username = username
@@ -44,8 +45,8 @@ class User(Entity):  # Basklass för användare
     def set_email(self, new_email):
         self._email = new_email
 
-
-class Customer(User):  # Underklass för kund
+# Underklass för kund
+class Customer(User):
     def __init__(self, username, password, email="", address=""):
         super().__init__(username, password, email, prefix="C")
         self._address = address
@@ -65,8 +66,8 @@ class Customer(User):  # Underklass för kund
     def set_address(self, new_address):
         self._address = new_address
 
-
-class Admin(User):  # Underklass för administratör
+# Underklass för administratör
+class Admin(User):
     def __init__(self, username, password, email="", prefix="A"):
         super().__init__(username, password, email, prefix)
 
@@ -79,8 +80,8 @@ class Admin(User):  # Underklass för administratör
     def create_user(self, username, password):
         return User(username, password)
 
-
-class Owner(Admin):  # Underklass för ägare
+# Underklass för ägare
+class Owner(Admin):
     def __init__(self, username, password, email=""):
         super().__init__(username, password, email, prefix="O")
         self._has_full_access = True
@@ -91,8 +92,8 @@ class Owner(Admin):  # Underklass för ägare
     def create_admin(self, username, password):
         return Admin(username, password)
 
-
-class Product(Entity):  # Produktklass
+# Produktklass
+class Product(Entity):
     def __init__(self, weight):
         super().__init__("P")
         self._weight = weight
@@ -100,8 +101,8 @@ class Product(Entity):  # Produktklass
     def get_weight(self):
         return self._weight
 
-
-class Order(Entity):  # Orderklass
+# Orderklass
+class Order(Entity):
     def __init__(self, customer_id, product_list):
         super().__init__("OR")
         self._customer_id = customer_id
@@ -122,8 +123,8 @@ class Order(Entity):  # Orderklass
     def get_product_list(self):
         return self._product_list
 
-
-class Transport(Entity):  # Transportklass
+# Transportklass
+class Transport(Entity):
     def __init__(self, capacity, prefix="T"):
         super().__init__(prefix)
         self._capacity = capacity
@@ -141,13 +142,13 @@ class Transport(Entity):  # Transportklass
     def get_capacity(self):
         return self._capacity
 
-
-class Truck(Transport):  # Underklass för lastbil
+# Underklass för lastbil
+class Truck(Transport):
     def __init__(self, capacity):
         super().__init__(capacity, prefix="TR")
 
-
-class Warehouse(Entity):  # Lagerklass
+# Lagerklass
+class Warehouse(Entity):
     def __init__(self):
         super().__init__("W")
         self._stock = []
@@ -161,70 +162,98 @@ class Warehouse(Entity):  # Lagerklass
     def list_stock(self):
         return self._stock
 
-
+# Skapa testanvändare
 erik = Customer("erik", "1234", "bober@gmail.com", "Storgatan 1")
-users.append(erik)  # Lägg till användare i listan
+users.append(erik)
 
-while login == False:  # Huvudmeny
+# Startmeny med felhantering
+while not login:
     print("\n1. Register")
     print("2. Login")
     print("3. Exit")
-    choice = input("Enter choice: ")
+    choice = input("Enter choice: ").strip()
 
     if choice == "1":
-        username = input("Enter username: ")
-        # Kontrollera om användarnamnet redan finns
-        if any(username == user.username for user in users):
-            print("Username already exists")
+        username = input("Enter username: ").strip()
+        if not username:
+            print("Username cannot be empty.")
             continue
-        password = input("Enter password: ")
+        if any(username == user.get_username() for user in users):
+            print("Username already exists.")
+            continue
+        password = input("Enter password: ").strip()
+        if not password:
+            print("Password cannot be empty.")
+            continue
         user = User(username, password)
         users.append(user)
-        print("Registration successful")
+        print("Registration successful.")
 
     elif choice == "2":
-        username = input("Enter username: ")
-        password = input("Enter password: ") 
-        user = next((user for user in users if user.get_username() == username and user.check_password(password)))  # Hitta användaren
+        username = input("Enter username: ").strip()
+        password = input("Enter password: ").strip()
+        user = next((u for u in users if u.get_username() == username and u.check_password(password)), None)
         if user:
-            print("Login successful")
+            print("Login successful.")
             login = True
+        else:
+            print("Invalid username or password.")
 
     elif choice == "3":
+        print("Exiting program.")
         break
 
-    if isinstance(user, Admin): # Om användaren är administratör
+    else:
+        print("Invalid choice, please enter 1, 2 or 3.")
+        continue
+
+    # Meny för administratör
+    if isinstance(user, Admin):
         while True:
             print("\nAdmin Menu")
             print("1. Show all users")
             print("2. Create admin")
             print("3. Logout")
-            choice = input("Enter choice: ")
+            choice = input("Enter choice: ").strip()
 
             if choice == "1":
                 for u in users:
-                    print(f"{u.id}: {u.username}") # Visa alla användare
+                    print(f"{u.id}: {u.get_username()}")
             elif choice == "2":
-                username = input("Enter new admin username: ")
-                password = input("Enter new admin password: ")
+                username = input("Enter new admin username: ").strip()
+                password = input("Enter new admin password: ").strip()
+                if not username or not password:
+                    print("Username and password cannot be empty.")
+                    continue
                 new_admin = Admin(username, password)
                 users.append(new_admin)
-                print("Admin created")
+                print("Admin created.")
             elif choice == "3":
                 print("Logged out.")
                 login = False
                 break
+            else:
+                print("Invalid choice, please enter 1, 2 or 3.")
 
-    else:
-        while True: # Kundmeny
-            print("\nCustomer Menu") 
+    # Meny för kund
+    elif isinstance(user, Customer):
+        while True:
+            print("\nCustomer Menu")
             print("1. View profile")
-            print("2. Logout")
-            choice = input("Enter choice: ")
+            print("2. Create order")
+            print("3. Logout")
+            choice = input("Enter choice: ").strip()
 
             if choice == "1":
                 print(user.view_profile())
             elif choice == "2":
+                product_weight = float(input("Enter product weight: "))
+                product = Product(product_weight)
+                order = user.create_order([product])
+                print(f"Order created with ID: {order.id}")
+            elif choice == "3":
                 print("Logged out.")
                 login = False
                 break
+            else:
+                print("Invalid choice, please enter 1, 2 or 3.")
