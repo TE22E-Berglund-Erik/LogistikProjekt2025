@@ -6,8 +6,6 @@ users = []
 login = False
 
 # Funktion för att generera unika ID:n
-
-
 def generate_id(prefix):
     while True:
         new_id = f"{prefix}{random.randint(1000, 9999)}"
@@ -16,8 +14,6 @@ def generate_id(prefix):
             return new_id
 
 # Basklass för entiteter med ID
-
-
 class Entity:
     def __init__(self, prefix):
         self._id = generate_id(prefix)  # Genererar ID med prefix
@@ -27,8 +23,6 @@ class Entity:
         return self._id
 
 # Basklass för användare
-
-
 class User(Entity):
     def __init__(self, username, password, email="", prefix="U"):
         super().__init__(prefix)
@@ -52,8 +46,6 @@ class User(Entity):
         self._email = new_email
 
 # Underklass för kund
-
-
 class Customer(User):
     def __init__(self, username, password, email="", address=""):
         super().__init__(username, password, email, prefix="C")
@@ -75,8 +67,6 @@ class Customer(User):
         self._address = new_address
 
 # Underklass för administratör
-
-
 class Admin(User):
     def __init__(self, username, password, email="", prefix="A"):
         super().__init__(username, password, email, prefix)
@@ -87,28 +77,45 @@ class Admin(User):
             users.remove(to_delete)
             return True
         return False
+    
+    def list_users(self):
+        for u in users:
+            print(f"{u.id}: {u.get_username()} ({u.__class__.__name__})")
 
-    def create_user(self, username, password):
-        return User(username, password)
-
+    def create_customer(self):
+        while True:
+            username = input("Enter new customer username: ").strip()
+            if any(u.get_username() == username for u in users):
+                print("Username already exists.")
+                continue
+            password = input("Enter new customer password: ").strip()
+            if not username or not password:
+                print("Username and password cannot be empty.")
+                continue
+            break
+        return Customer(username, password)
+    
 # Underklass för ägare
-
-
 class Owner(Admin):
     def __init__(self, username, password, email=""):
         super().__init__(username, password, email, prefix="O")
         self._has_full_access = True
 
-    def show_all_users(self):
-        for u in users:
-            print(f"{u.id}: {u.get_username()} ({u.__class__.__name__})")
-
-    def create_admin(self, username, password):
+    def create_admin(self):
+        while True:
+            username = input("Enter new admin username: ").strip()
+            if any(u.get_username() == username for u in users):
+                print("Username already exists.")
+                continue
+            password = input("Enter new admin password: ").strip()
+            if not username or not password:
+                print("Username and password cannot be empty.")
+                continue
+            break
         return Admin(username, password)
 
+
 # Produktklass
-
-
 class Product(Entity):
     def __init__(self, weight):
         super().__init__("P")
@@ -118,8 +125,6 @@ class Product(Entity):
         return self._weight
 
 # Orderklass
-
-
 class Order(Entity):
     def __init__(self, customer_id, product_list):
         super().__init__("OR")
@@ -141,9 +146,19 @@ class Order(Entity):
     def get_product_list(self):
         return self._product_list
 
+    def print_product_list(self):
+        for p in self._product_list:
+            print(f"- Product ID: {p.id}, Weight: {p.get_weight()} kg")
+
+    def remove_product_by_index(self, index):
+        if 0 <= index < len(self._product_list):
+            removed = self._product_list[index]
+            self._product_list.remove(removed)
+            return removed
+        return None
+
+
 # Transportklass
-
-
 class Transport(Entity):
     def __init__(self, capacity, prefix="T"):
         super().__init__(prefix)
@@ -163,15 +178,11 @@ class Transport(Entity):
         return self._capacity
 
 # Underklass för lastbil
-
-
 class Truck(Transport):
     def __init__(self, capacity):
         super().__init__(capacity, prefix="TR")
-
+        
 # Lagerklass
-
-
 class Warehouse(Entity):
     def __init__(self):
         super().__init__("W")
@@ -199,24 +210,13 @@ def owner_menu(user):
 
         if choice == "1":
             for u in users:
-                # Visar alla användare med ID och typ
-                print(f"{u.id}: {u.get_username()} ({u.__class__.__name__})")
+                user.list_users()  # Visar alla användare med ID och typ
         elif choice == "2":
-            username = input("Enter new admin username: ").strip()
-            password = input("Enter new admin password: ").strip()
-            if not username or not password:
-                print("Username and password cannot be empty.")
-                continue
-            new_admin = user.create_admin(username, password)
+            new_admin = user.create_admin()
             users.append(new_admin)
             print("Admin created.")
         elif choice == "3":
-            username = input("Enter new customer username: ").strip()
-            password = input("Enter new customer password: ").strip()
-            if not username or not password:
-                print("Username and password cannot be empty.")
-                continue
-            new_customer = Customer(username, password)
+            new_customer = user.create_customer()
             users.append(new_customer)
             print("Customer created.")
         elif choice == "4":
@@ -243,14 +243,9 @@ def admin_menu(user):
 
         if choice == "1":
             for u in users:
-                print(f"{u.id}: {u.get_username()} ({u.__class__.__name__})") # Visar alla användare med ID och typ
+                user.list_users() # Visar alla användare med ID och typ
         elif choice == "2":
-            username = input("Enter new customer username: ").strip()
-            password = input("Enter new customer password: ").strip()
-            if not username or not password:
-                print("Username and password cannot be empty.")
-                continue
-            new_customer = Customer(username, password)
+            new_customer = user.create_customer()
             users.append(new_customer)
             print("Customer created.")
         elif choice == "3":
@@ -273,45 +268,66 @@ def customer_menu(user):
         print("\nCustomer Menu")
         print("1. View profile")
         print("2. Change email")
-        print("3. Create order")
-        print("4. View orders")
-        print("5. Logout")
+        print("3. Change address")
+        print("4. Create order")
+        print("5. View orders")
+        print("6. Add product to existing order")
+        print("7. Remove product from existing order")
+        print("8. Logout")
         choice = input("Enter choice: ").strip()
 
         if choice == "1":
             print(user.view_profile())
+            print(f"Address: {user.get_address()}")
         elif choice == "2":
             new_email = input("Enter new email: ").strip()
             user.set_email(new_email)
             print("Email updated.")
         elif choice == "3":
+            new_address = input("Enter new address: ").strip()
+            user.set_address(new_address)
+            print("Address updated.")
+        elif choice == "4":
             try:
-                weight_input = input("Enter product weight: ").strip()
-                if not weight_input:
-                    print("Weight cannot be empty.")
-                    continue
-                weight = float(weight_input)
+                weight = float(input("Enter product weight: ").strip())
                 if weight <= 0:
                     print("Weight must be positive.")
                     continue
-                product = Product(weight) # Skapa produkt med vikt
-                order = user.create_order([product]) 
+                product = Product(weight)
+                order = user.create_order([product])
                 print(f"Order created with ID: {order.id}")
             except ValueError:
                 print("Invalid weight. Please enter a number.")
-        elif choice == "4":
-            orders = user.get_orders()
-            if not orders:
-                print("No orders found.")
-            else:
-                for order in orders:
-                    total_weight = order.get_total_weight()
-                    print(f"Order {order.id}: Total weight {total_weight} kg")
         elif choice == "5":
+            orders = user.get_orders()
+            for order in orders:
+                print(f"\nOrder {order.id}")
+                print(f"Total weight: {order.get_total_weight()} kg")
+                order.print_product_list()
+        elif choice == "6":
+            order_id = input("Enter order ID: ").strip()
+            order = next((o for o in user.get_orders() if o.id == order_id))
+            weight = float(input("Enter new product weight: ").strip())
+            if weight <= 0:
+                print("Weight must be positive.")
+                continue
+            product = Product(weight)
+            order.add_product(product)
+            print(f"Product {product.id} added to order {order.id}.")
+        elif choice == "7":
+            order_id = input("Enter order ID: ").strip()
+            order = next((o for o in user.get_orders() if o.id == order_id))
+            for i, p in enumerate(order.get_product_list()):
+                print(f"{i+1}. {p.id}, {p.get_weight()} kg")
+            idx = int(input("Enter product number to remove: ").strip()) - 1
+            removed = order.remove_product_by_index(idx)
+            if removed:
+                print(f"Removed product {removed.id}.")
+        elif choice == "8":
             print("Logged out.")
             return
         else:
-            print("Invalid choice, please enter 1-5.")
+            print("Invalid choice, please enter 1-8.")
 
 
 # Funktion för huvudmenyn
