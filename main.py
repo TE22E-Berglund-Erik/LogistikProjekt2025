@@ -8,15 +8,15 @@ login = False
 # Funktion för att generera unika ID:n
 def generate_id(prefix):
     while True:
-        new_id = f"{prefix}{random.randint(1000, 9999)}"
-        if new_id not in ids:
+        new_id = f"{prefix}{random.randint(1000, 9999)}" # Genererar ett ID med prefix och ett slumpmässigt numme
+        if new_id not in ids: # Kollar om ID:t redan finns
             ids.add(new_id)
             return new_id
 
 # Basklass för entiteter med ID
 class Entity:
     def __init__(self, prefix):
-        self._id = generate_id(prefix)
+        self._id = generate_id(prefix) # Genererar ett unikt ID med prefix
 
     @property
     def id(self):
@@ -51,8 +51,8 @@ class Customer(User):
         self._address = address
         self._orders = []
 
-    def create_order(self, products):
-        order = Order(self.id, products)
+    def create_order(self, products): # Skapar en order med en lista av produkter
+        order = Order(self.id, products) # Skapar en order med ID och produkterna
         self._orders.append(order)
         return order
 
@@ -70,20 +70,22 @@ class Admin(User):
         super().__init__(username, password, email, prefix)
 
     def delete_user(self, user_id):
-        to_delete = next((u for u in users if u.id == user_id), None)
+        to_delete = next((u for u in users if u.id == user_id), None) # Hittar användaren med det angivna ID:t annars none
         if to_delete:
-            users.remove(to_delete)
+            users.remove(to_delete) # Tar bort användaren från listan
             return True
         return False
 
+    # Skriver ut alla användare
     def list_users(self):
         for u in users:
-            print(f"{u.id}: {u.get_username()} ({u.__class__.__name__})")
-
+            print(f"{u.id}: {u.get_username()} ({u.__class__.__name__})") # Skriver ut alla användare med deras ID och typ
+ 
+    # Skapar en ny kund
     def create_customer(self):
         while True:
             username = input("Enter new customer username: ").strip()
-            if any(u.get_username() == username for u in users):
+            if any(u.get_username() == username for u in users): # Kollar om användarnamnet redan finns i users
                 print("Username already exists.")
                 continue
             password = input("Enter new customer password: ").strip()
@@ -93,15 +95,17 @@ class Admin(User):
             break
         return Customer(username, password)
 
+    #  Ägar klass 
 class Owner(Admin):
     def __init__(self, username, password, email=""):
         super().__init__(username, password, email, prefix="O")
         self._has_full_access = True
 
+    # Metod för att skapa en ny admin
     def create_admin(self):
         while True:
             username = input("Enter new admin username: ").strip()
-            if any(u.get_username() == username for u in users):
+            if any(u.get_username() == username for u in users): # Kollar om användarnamnet redan finns i users
                 print("Username already exists.")
                 continue
             password = input("Enter new admin password: ").strip()
@@ -111,6 +115,7 @@ class Owner(Admin):
             break
         return Admin(username, password)
 
+# Produkt och orderklasser
 class Product(Entity):
     def __init__(self, weight):
         super().__init__("P")
@@ -126,67 +131,33 @@ class Order(Entity):
         self._product_list = product_list
 
     def get_total_weight(self):
-        return sum(p.get_weight() for p in self._product_list)
+        return sum(p.get_weight() for p in self._product_list) # Beräknar totalvikten av produkterna i ordern
 
     def get_customer_id(self):
         return self._customer_id
 
     def add_product(self, product):
-        self._product_list.append(product)
+        self._product_list.append(product) # Lägger till en produkt i ordern
 
     def remove_product(self, product):
-        self._product_list.remove(product)
+        self._product_list.remove(product) # Tar bort en produkt från ordern
 
     def get_product_list(self):
-        return self._product_list
+        return self._product_list # Hämtar produktlistan
 
-    def print_product_list(self):
+    def print_product_list(self): # Skriver ut produktlistan
         for p in self._product_list:
-            print(f"- Product ID: {p.id}, Weight: {p.get_weight()} kg")
+            print(f"- Product ID: {p.id}, Weight: {p.get_weight()} kg") # Skriver ut varje produkt i listan
 
-    def remove_product_by_index(self, index):
+    def remove_product_by_index(self, index): # Tar bort en produkt från listan baserat på index
         if 0 <= index < len(self._product_list):
             removed = self._product_list[index]
             self._product_list.remove(removed)
             return removed
         return None
-
-class Transport(Entity):
-    def __init__(self, capacity, prefix="T"):
-        super().__init__(prefix)
-        self._capacity = capacity
-        self._orders = []
-
-    def add_order(self, order):
-        self._orders.append(order)
-
-    def get_orders(self):
-        return self._orders
-
-    def is_overloaded(self):
-        return sum(order.get_total_weight() for order in self._orders) > self._capacity
-
-    def get_capacity(self):
-        return self._capacity
-
-class Truck(Transport):
-    def __init__(self, capacity):
-        super().__init__(capacity, prefix="TR")
-
-class Warehouse(Entity):
-    def __init__(self):
-        super().__init__("W")
-        self._stock = []
-
-    def add_product(self, product):
-        self._stock.append(product)
-
-    def remove_product(self, product):
-        self._stock.remove(product)
-
-    def list_stock(self):
-        return self._stock
-
+    
+    
+ # Meny som visas för ägare
 def owner_menu(user):
     while True:
         print("\nOwner Menu")
@@ -231,6 +202,7 @@ def owner_menu(user):
         else:
             print("Invalid choice, please enter 1-5.")
 
+# Meny som visas för admin
 def admin_menu(user):
     while True:
         print("\nAdmin Menu")
@@ -269,6 +241,7 @@ def admin_menu(user):
         else:
             print("Invalid choice, please enter 1-4.")
 
+# Meny som visas för kund
 def customer_menu(user):
     while True:
         print("\nCustomer Menu")
@@ -309,8 +282,8 @@ def customer_menu(user):
                     print(f"Total weight: {order.get_total_weight()} kg")
                     order.print_product_list()
             elif choice == "6":
-                order_id = input("Enter order ID: ").strip()
-                order = next((o for o in user.get_orders() if o.id == order_id), None)
+                order_id = input("Enter order ID: ").strip() 
+                order = next((o for o in user.get_orders() if o.id == order_id), None) # Hittar ordern med det angivna ID:t annars none
                 if not order:
                     print("Order not found.")
                     continue
@@ -323,7 +296,7 @@ def customer_menu(user):
                 print(f"Product {product.id} added to order {order.id}.")
             elif choice == "7":
                 order_id = input("Enter order ID: ").strip()
-                order = next((o for o in user.get_orders() if o.id == order_id), None)
+                order = next((o for o in user.get_orders() if o.id == order_id), None) # Hittar ordern med det angivna ID:t annars none
                 if not order:
                     print("Order not found.")
                     continue
@@ -373,7 +346,7 @@ def start_menu():
             try:
                 username = input("Enter username: ").strip()
                 password = input("Enter password: ").strip()
-                user = next((u for u in users if u.get_username() == username and u.check_password(password)), None)
+                user = next((u for u in users if u.get_username() == username and u.check_password(password)), None) # Hittar användaren med det angivna användarnamnet och lösenordet annars none
                 if user:
                     print("Login successful.")
                     if isinstance(user, Owner):
