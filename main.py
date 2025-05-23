@@ -16,7 +16,7 @@ def generate_id(prefix):
 # Basklass för entiteter med ID
 class Entity:
     def __init__(self, prefix):
-        self._id = generate_id(prefix)  # Genererar ID med prefix
+        self._id = generate_id(prefix)
 
     @property
     def id(self):
@@ -45,7 +45,6 @@ class User(Entity):
     def set_email(self, new_email):
         self._email = new_email
 
-# Underklass för kund
 class Customer(User):
     def __init__(self, username, password, email="", address=""):
         super().__init__(username, password, email, prefix="C")
@@ -66,7 +65,6 @@ class Customer(User):
     def set_address(self, new_address):
         self._address = new_address
 
-# Underklass för administratör
 class Admin(User):
     def __init__(self, username, password, email="", prefix="A"):
         super().__init__(username, password, email, prefix)
@@ -77,7 +75,7 @@ class Admin(User):
             users.remove(to_delete)
             return True
         return False
-    
+
     def list_users(self):
         for u in users:
             print(f"{u.id}: {u.get_username()} ({u.__class__.__name__})")
@@ -94,8 +92,7 @@ class Admin(User):
                 continue
             break
         return Customer(username, password)
-    
-# Underklass för ägare
+
 class Owner(Admin):
     def __init__(self, username, password, email=""):
         super().__init__(username, password, email, prefix="O")
@@ -114,8 +111,6 @@ class Owner(Admin):
             break
         return Admin(username, password)
 
-
-# Produktklass
 class Product(Entity):
     def __init__(self, weight):
         super().__init__("P")
@@ -124,7 +119,6 @@ class Product(Entity):
     def get_weight(self):
         return self._weight
 
-# Orderklass
 class Order(Entity):
     def __init__(self, customer_id, product_list):
         super().__init__("OR")
@@ -157,8 +151,6 @@ class Order(Entity):
             return removed
         return None
 
-
-# Transportklass
 class Transport(Entity):
     def __init__(self, capacity, prefix="T"):
         super().__init__(prefix)
@@ -171,18 +163,16 @@ class Transport(Entity):
     def get_orders(self):
         return self._orders
 
-    def is_overloaded(self):  # Kontrollera om transporten är överbelastad
+    def is_overloaded(self):
         return sum(order.get_total_weight() for order in self._orders) > self._capacity
 
     def get_capacity(self):
         return self._capacity
 
-# Underklass för lastbil
 class Truck(Transport):
     def __init__(self, capacity):
         super().__init__(capacity, prefix="TR")
-        
-# Lagerklass
+
 class Warehouse(Entity):
     def __init__(self):
         super().__init__("W")
@@ -197,7 +187,6 @@ class Warehouse(Entity):
     def list_stock(self):
         return self._stock
 
-# Owner meny
 def owner_menu(user):
     while True:
         print("\nOwner Menu")
@@ -209,29 +198,39 @@ def owner_menu(user):
         choice = input("Enter choice: ").strip()
 
         if choice == "1":
-            for u in users:
-                user.list_users()  # Visar alla användare med ID och typ
+            try:
+                user.list_users()
+            except Exception as e:
+                print(f"Error showing users: {e}")
         elif choice == "2":
-            new_admin = user.create_admin()
-            users.append(new_admin)
-            print("Admin created.")
+            try:
+                new_admin = user.create_admin()
+                users.append(new_admin)
+                print("Admin created.")
+            except Exception as e:
+                print(f"Error creating admin: {e}")
         elif choice == "3":
-            new_customer = user.create_customer()
-            users.append(new_customer)
-            print("Customer created.")
+            try:
+                new_customer = user.create_customer()
+                users.append(new_customer)
+                print("Customer created.")
+            except Exception as e:
+                print(f"Error creating customer: {e}")
         elif choice == "4":
-            user_id = input("Enter user ID to delete: ").strip()
-            if user.delete_user(user_id):
-                print(f"User {user_id} deleted.")
-            else:
-                print("User ID not found.")
+            try:
+                user_id = input("Enter user ID to delete: ").strip()
+                if user.delete_user(user_id):
+                    print(f"User {user_id} deleted.")
+                else:
+                    print("User ID not found.")
+            except Exception as e:
+                print(f"Error deleting user: {e}")
         elif choice == "5":
             print("Logged out.")
             return
         else:
             print("Invalid choice, please enter 1-5.")
 
-# Admin meny
 def admin_menu(user):
     while True:
         print("\nAdmin Menu")
@@ -242,27 +241,34 @@ def admin_menu(user):
         choice = input("Enter choice: ").strip()
 
         if choice == "1":
-            for u in users:
-                user.list_users() # Visar alla användare med ID och typ
+            try:
+                user.list_users()
+            except Exception as e:
+                print(f"Error showing users: {e}")
         elif choice == "2":
-            new_customer = user.create_customer()
-            users.append(new_customer)
-            print("Customer created.")
+            try:
+                new_customer = user.create_customer()
+                users.append(new_customer)
+                print("Customer created.")
+            except Exception as e:
+                print(f"Error creating customer: {e}")
         elif choice == "3":
-            user_id = input("Enter user ID to delete: ").strip()
-            to_delete = next((u for u in users if u.id == user_id))
-            if to_delete:
-                users.remove(to_delete)
-                print(f"User {user_id} deleted.")
-            else:
-                print("User ID not found.")
+            try:
+                user_id = input("Enter user ID to delete: ").strip()
+                to_delete = next((u for u in users if u.id == user_id), None)
+                if to_delete:
+                    users.remove(to_delete)
+                    print(f"User {user_id} deleted.")
+                else:
+                    print("User ID not found.")
+            except Exception as e:
+                print(f"Error deleting user: {e}")
         elif choice == "4":
             print("Logged out.")
             return
         else:
             print("Invalid choice, please enter 1-4.")
 
-# Customer meny
 def customer_menu(user):
     while True:
         print("\nCustomer Menu")
@@ -276,19 +282,19 @@ def customer_menu(user):
         print("8. Logout")
         choice = input("Enter choice: ").strip()
 
-        if choice == "1":
-            print(user.view_profile())
-            print(f"Address: {user.get_address()}")
-        elif choice == "2":
-            new_email = input("Enter new email: ").strip()
-            user.set_email(new_email)
-            print("Email updated.")
-        elif choice == "3":
-            new_address = input("Enter new address: ").strip()
-            user.set_address(new_address)
-            print("Address updated.")
-        elif choice == "4":
-            try:
+        try:
+            if choice == "1":
+                print(user.view_profile())
+                print(f"Address: {user.get_address()}")
+            elif choice == "2":
+                new_email = input("Enter new email: ").strip()
+                user.set_email(new_email)
+                print("Email updated.")
+            elif choice == "3":
+                new_address = input("Enter new address: ").strip()
+                user.set_address(new_address)
+                print("Address updated.")
+            elif choice == "4":
                 weight = float(input("Enter product weight: ").strip())
                 if weight <= 0:
                     print("Weight must be positive.")
@@ -296,41 +302,47 @@ def customer_menu(user):
                 product = Product(weight)
                 order = user.create_order([product])
                 print(f"Order created with ID: {order.id}")
-            except ValueError:
-                print("Invalid weight. Please enter a number.")
-        elif choice == "5":
-            orders = user.get_orders()
-            for order in orders:
-                print(f"\nOrder {order.id}")
-                print(f"Total weight: {order.get_total_weight()} kg")
-                order.print_product_list()
-        elif choice == "6":
-            order_id = input("Enter order ID: ").strip()
-            order = next((o for o in user.get_orders() if o.id == order_id))
-            weight = float(input("Enter new product weight: ").strip())
-            if weight <= 0:
-                print("Weight must be positive.")
-                continue
-            product = Product(weight)
-            order.add_product(product)
-            print(f"Product {product.id} added to order {order.id}.")
-        elif choice == "7":
-            order_id = input("Enter order ID: ").strip()
-            order = next((o for o in user.get_orders() if o.id == order_id))
-            for i, p in enumerate(order.get_product_list()):
-                print(f"{i+1}. {p.id}, {p.get_weight()} kg")
-            idx = int(input("Enter product number to remove: ").strip()) - 1
-            removed = order.remove_product_by_index(idx)
-            if removed:
-                print(f"Removed product {removed.id}.")
-        elif choice == "8":
-            print("Logged out.")
-            return
-        else:
-            print("Invalid choice, please enter 1-8.")
+            elif choice == "5":
+                orders = user.get_orders()
+                for order in orders:
+                    print(f"\nOrder {order.id}")
+                    print(f"Total weight: {order.get_total_weight()} kg")
+                    order.print_product_list()
+            elif choice == "6":
+                order_id = input("Enter order ID: ").strip()
+                order = next((o for o in user.get_orders() if o.id == order_id), None)
+                if not order:
+                    print("Order not found.")
+                    continue
+                weight = float(input("Enter new product weight: ").strip())
+                if weight <= 0:
+                    print("Weight must be positive.")
+                    continue
+                product = Product(weight)
+                order.add_product(product)
+                print(f"Product {product.id} added to order {order.id}.")
+            elif choice == "7":
+                order_id = input("Enter order ID: ").strip()
+                order = next((o for o in user.get_orders() if o.id == order_id), None)
+                if not order:
+                    print("Order not found.")
+                    continue
+                for i, p in enumerate(order.get_product_list()):
+                    print(f"{i+1}. {p.id}, {p.get_weight()} kg")
+                idx = int(input("Enter product number to remove: ").strip()) - 1
+                removed = order.remove_product_by_index(idx)
+                if removed:
+                    print(f"Removed product {removed.id}.")
+                else:
+                    print("Invalid index.")
+            elif choice == "8":
+                print("Logged out.")
+                return
+            else:
+                print("Invalid choice, please enter 1-8.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
-
-# Funktion för huvudmenyn
 def start_menu():
     while True:
         print("\nMain Menu")
@@ -340,42 +352,45 @@ def start_menu():
         choice = input("Enter choice: ").strip()
 
         if choice == "1":
-            username = input("Enter username: ").strip()
-            if not username:
-                print("Username cannot be empty.")
-                continue
-            if any(username == u.get_username() for u in users):
-                print("Username already exists.")
-                continue
-            password = input("Enter password: ").strip()
-            if not password:
-                print("Password cannot be empty.")
-                continue
-            user = Customer(username, password)
-            users.append(user)
-            print("Registration successful. You can now log in.")
-
+            try:
+                username = input("Enter username: ").strip()
+                if not username:
+                    print("Username cannot be empty.")
+                    continue
+                if any(username == u.get_username() for u in users):
+                    print("Username already exists.")
+                    continue
+                password = input("Enter password: ").strip()
+                if not password:
+                    print("Password cannot be empty.")
+                    continue
+                user = Customer(username, password)
+                users.append(user)
+                print("Registration successful. You can now log in.")
+            except Exception as e:
+                print(f"Error during registration: {e}")
         elif choice == "2":
-            username = input("Enter username: ").strip()
-            password = input("Enter password: ").strip()
-            user = next((u for u in users if u.get_username() ==
-                        username and u.check_password(password)))
-            if user:
-                print("Login successful.")
-                if isinstance(user, Owner):
-                    owner_menu(user)
-                elif isinstance(user, Admin):
-                    admin_menu(user)
-                elif isinstance(user, Customer):
-                    customer_menu(user)
-            else:
-                print("Invalid username or password.")
+            try:
+                username = input("Enter username: ").strip()
+                password = input("Enter password: ").strip()
+                user = next((u for u in users if u.get_username() == username and u.check_password(password)), None)
+                if user:
+                    print("Login successful.")
+                    if isinstance(user, Owner):
+                        owner_menu(user)
+                    elif isinstance(user, Admin):
+                        admin_menu(user)
+                    elif isinstance(user, Customer):
+                        customer_menu(user)
+                else:
+                    print("Invalid username or password.")
+            except Exception as e:
+                print(f"Login failed: {e}")
         elif choice == "3":
             print("Exiting program.")
             break
         else:
             print("Invalid choice, please enter 1, 2 or 3.")
-
 
 # Test användare
 for i in range(1, 10):
