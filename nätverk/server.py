@@ -8,11 +8,21 @@ socketio = SocketIO(app)
 def index():
     return render_template('chat.html')
 
+@socketio.on('connect')
+def on_connect():
+    print('Client connected')
+
+@socketio.on('disconnect')
+def on_disconnect():
+    print('Client disconnected')
+
 @socketio.on('message')
 def handle_msg(msg):
-    full_msg = f"Server received: {msg}"
-    print(full_msg)
-    send(full_msg, broadcast=True)
+    try:
+        print(msg)
+        send(msg, broadcast=True)
+    except Exception as e:
+        print(f"Error handling message: {e}")
 
 if __name__ == '__main__':
     socketio.run(app)
