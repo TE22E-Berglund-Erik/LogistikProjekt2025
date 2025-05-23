@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Basic Chat</title>
+  <title>Chat</title>
   <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
 </head>
 <body>
+  <input id="name" placeholder="Name"><br>
   <input id="msg" placeholder="Message">
   <button onclick="sendMsg()">Send</button>
   <div id="chat"></div>
@@ -12,16 +13,19 @@
   <script>
     const socket = io();
 
-    socket.on("message", msg => {
+    socket.on("message", (msg) => {
       const p = document.createElement("p");
       p.textContent = msg;
       document.getElementById("chat").appendChild(p);
     });
 
     function sendMsg() {
+      const name = document.getElementById("name").value;
       const msg = document.getElementById("msg").value;
-      socket.send(msg);
-      document.getElementById("msg").value = "";
+      if (name && msg) {
+        socket.send(`${name}: ${msg}`);
+        document.getElementById("msg").value = "";
+      }
     }
   </script>
 </body>
