@@ -10,7 +10,9 @@ def index():
 
 @socketio.on('message')
 def handle_msg(msg):
-    send(msg, broadcast=True)
+    full_msg = f"Server received: {msg}"
+    print(full_msg)
+    send(full_msg, broadcast=True)
 
 if __name__ == '__main__':
     socketio.run(app)
